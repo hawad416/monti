@@ -20,8 +20,11 @@ import time
 st.set_page_config(layout="wide")
 st.title("lesson 1: hansel & gretel 🍭")
 
+converesation_memory = []
+
      
 def get_comprehension_analysis(excerpt, question, reflection, metric):
+    global converesation_memory
     analysis_prompt = f"""
     Role: You are a teacher at a montessori creating questions to foster critical thinking in young readers.  
     Your student has recently read an excerpt from a childrens book & has completed a reflection that you will provide feedback on.
@@ -53,11 +56,14 @@ def get_comprehension_analysis(excerpt, question, reflection, metric):
 
             # Create a completion request to OpenAI
     completion = openai.chat.completions.create(
-                model="gpt-4-0125-preview",
+                model="gpt-4o",
                 messages=messages,
             )
     preferences = completion.choices[0].message.content
     print(preferences)
+
+    converesation_memory.append(analysis_prompt)
+    converesation_memory.append(preferences)
             
     return preferences
        
@@ -73,8 +79,11 @@ def get_comprehension_question(str_chapter, comprehension_prompt):
         """
         Generates Comprehension Question.
         """
+
+        global converesation_memory # decalre as global mem inside the function to access the global version of it. 
         
         system_prompt = comprehension_prompt
+
             
         messages = [
                 {"role": "system", "content": system_prompt},
@@ -82,13 +91,68 @@ def get_comprehension_question(str_chapter, comprehension_prompt):
 
             # Create a completion request to OpenAI
         completion = openai.chat.completions.create(
-                model="gpt-4-0125-preview",
+                model="gpt-4o",
                 messages=messages,
             )
         preferences = completion.choices[0].message.content
         print(preferences)
+
+         # append intiial role and system prompt
+        converesation_memory.append(comprehension_prompt)
+        converesation_memory.append(preferences)
             
         return preferences
+        
+
+def create_pathway_nodes(conversation_memory):
+    recent_excerpt = f""" 
+             "The children followed the white trail, and by sunrise they were safely home – but their stepmother’s smile was as cold as winter rain. “Husband,” she hissed. “See how your two pests torment me. Tonight you must lose them forever.
+              She gave each child a morsel of stale bread, and when their father led them through Long Lost Wood they followed him sadly. After many miles, he mopped his eyes and said, “Wait here, my dears, while I search for ripe blackberries.
+             They knew he would never come back, but when the wolves howled, Hansel smiled and said, “Cheer up, little sister. This time I have scattered a trail of small white breadcrumbs.
+             Alas! There was no trail to be seen – hungry birds had stolen EVERY crumb. So the two children slept on a bed of brown leaves, and in their dreams they saw a white dove who circled above them, calling: “Follow me! Follow me!”"
+
+        """
+
+
+    pathway_nodes_prompt = f"""
+            Role: You are a teacher at a montessori creating activities to foster critical thinking in young readers. 
+            You conduct deep engaging activities to help children grow into high impact adults. You will be providing the child with 3 potential pathways that the story can take and be rewritten in.
+
+            Here is where the story  (Hansel & Gretel) has left off: {recent_excerpt}
+
+            Task: 
+            - Your task is to generate 3 unique & thoughtful story pathways that a young reader can choose from. The pathway the young reader chooses will determine which direction the story proceeds.
+            - Stay away from traditional thinking and use the past conversation with the student and story excerpts to create these 3 pathway options. Here is the past conversation: {conversation_memory}
+            - You should return a JSON with the fields being 'a' , 'b', 'c' and the corresponding values being the unique pathway. For Example: 
+                 
+            [
+
+                    'a': ‘attempt to kill the witch”,
+                    
+                    ‘b’: “confront the step mom”,
+                    
+                    ‘c’: flee the village 
+            ]
+			    
+        """
+       
+    messages = [
+                {"role": "system", "content": pathway_nodes_prompt},
+        ]
+
+            # Create a completion request to OpenAI
+    completion = openai.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+            )
+    preferences = completion.choices[0].message.content
+    print(preferences)
+
+         # append intiial role and system prompt
+    converesation_memory.append(comprehension_prompt)
+    converesation_memory.append(preferences)
+            
+    return preferences
         
 
 
@@ -97,6 +161,7 @@ from stories.StoryBook import Storybook
 from audiorecorder import audiorecorder
 
 
+chosen_metric_improvement = ""
 
 with st.sidebar:
     st.title("monti 🧸| hawas workspace")
@@ -115,7 +180,7 @@ m = st.markdown("""
     </style>""", unsafe_allow_html=True)
 
 with st.chat_message("assistant"):
-        intro = "hey! i am monti 🧸, your friend for helping you create the most magical stories and improve your reading skills. let's get started!"
+        intro = "hey! i am monti 🧸, your friend for helping you create the most magical stories and improve your reading comprehension & writing skills. let's get started!"
         st.markdown(intro)
         imgs = (["https://i.pinimg.com/originals/21/57/5b/21575b799eb661dff318c504dc38798b.gif"])
         st.image(imgs, width=120)
@@ -137,11 +202,21 @@ example_prompts = [
 ]
 
 button_cols = st.columns(6)
-button_cols[0].button(example_prompts[0])
-button_cols[1].button(example_prompts[1])
-button_cols[2].button(example_prompts[2])
-button_cols[3].button(example_prompts[3])
-button_cols[4].button(example_prompts[4])
+if button_cols[0].button(example_prompts[0]):
+     chosen_metric_improvement = example_prompts[0]
+
+if button_cols[1].button(example_prompts[1]):
+    chosen_metric_improvement = example_prompts[1]
+
+if button_cols[2].button(example_prompts[2]):
+     chosen_metric_improvement = example_prompts[2]
+     st.info("Metric Emphasis Today: Critical Thinking")
+
+if button_cols[3].button(example_prompts[3]):
+     chosen_metric_improvement = example_prompts[3]
+
+if button_cols[4].button(example_prompts[4]):
+     chosen_metric_improvement = example_prompts[4]
 
 
 st.write("")
@@ -177,6 +252,8 @@ has_completed_comprehension = False
 
 
 # CHAPTER 1 
+
+ready_for_ch2 = False
 
 with st.expander("Chapter 1", icon="🤠"):
     st.subheader("Introduction ")
@@ -227,7 +304,7 @@ with st.expander("Chapter 1", icon="🤠"):
             st.audio(audio.export().read()) 
             audio.export("audio.wav", format="wav")
 
-    
+            reflection = "reflection incomplete. do not grade or provide feedback."
     
             with st.spinner("monti 🧸 is listening to your wonderful reflection..."):   
                     st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLwTdUz9t_7mbOWxcfT0EPQbCE7Fik5r9d1g&s", width = 50)  
@@ -239,6 +316,8 @@ with st.expander("Chapter 1", icon="🤠"):
                         audio = r.record(source)
                     try:
                         reflection = r.recognize_google(audio)
+                        if len(reflection) <= 0:
+                             reflection="reflection incomplete. do not grade or provide feedback."
                         print("Text: "+ reflection)
                     except Exception as e:
                         print("Exception: "+str(e))
@@ -253,36 +332,41 @@ with st.expander("Chapter 1", icon="🤠"):
     
     if has_completed_comprehension:
         st.image("https://i.pinimg.com/originals/fa/ed/62/faed622a5d07d85ac7a190f0a8c385bc.gif", width=60)
-        st.text("Optional Further Reflection Based on Above Analysis")
+        st.subheader("Further Reflection Based on Above Analysis")
         st.text_input("")
         st.success("Amazing Job! Next Chapter...")
-        # potential feedback analysis here. 
+        ready_for_ch2 = True
 
 
-    has_completed_comprehension = False
+print(converesation_memory)
 
 
-if has_completed_comprehension:
+if ready_for_ch2:
      # go on to chapter 2 !
      has_completed_comprehension = False
-     with st.expander("Chapter 1"):
-        st.subheader("Introduction ")
-        # Example of accessing pages and checking for comprehension pauses
-        chapter1 = ""
-        for i in range(storybook.num_pages()):
+     with st.expander("Chapter 2"):
+        st.subheader("A Walk Too Far ")
+
+        chapter2 = ""
+        for i in range(comprehension_pauses[0] + 1, storybook.num_pages()):
             page = storybook.get_page(i)
-            chapter1+=page.text + "\n\n"
+            chapter2+=page.text + "\n\n"
             if storybook.is_comprehension_pause(i):
-                st.markdown(chapter1)
-                print(f"Time for a comprehension check {i+1}")
+                st.markdown(chapter2)
                 break
-        
+
+
         st.code(
             """
             time for a fun comprehension check :)""", language="txt"
         
         )
 
-        st.button("")
+        pathways = create_pathway_nodes(converesation_memory)
+
+        # the activity should depend on the exercise they are choosing. 
+        st.code(pathways, language="txt")
+
+    
 
 
