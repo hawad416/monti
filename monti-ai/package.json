@@ -6,6 +6,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.7.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
@@ -14,7 +15,7 @@
   "scripts": {
     "start": "react-scripts start",
     "start-api": "/Users/hdrammeh/monti/monti-backend/monti-env/bin/flask run --no-debugger",
-    "start-2":"../monti-backend/monti-env/bin/flask run",
+    "start-2": "../monti-backend/monti-env/bin/flask run",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -37,7 +38,5 @@
       "last 1 safari versions"
     ]
   },
-
   "proxy": "http://localhost:5000/"
-
 }
