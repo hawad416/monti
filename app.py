@@ -12,6 +12,7 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 import streamlit as st
 import time 
+import json
 
 
 
@@ -69,7 +70,6 @@ def get_comprehension_analysis(excerpt, question, reflection, metric):
        
 
     
-    
 
 # takes in a specific story chapter and generates a string based on it.
 # also takes in the metric the user would like to improve. 
@@ -123,16 +123,18 @@ def create_pathway_nodes(conversation_memory):
             Task: 
             - Your task is to generate 3 unique & thoughtful story pathways that a young reader can choose from. The pathway the young reader chooses will determine which direction the story proceeds.
             - Stay away from traditional thinking and use the past conversation with the student and story excerpts to create these 3 pathway options. Here is the past conversation: {conversation_memory}
-            - You should return a JSON with the fields being 'a' , 'b', 'c' and the corresponding values being the unique pathway. For Example: 
+            - You MUST RETURN a JSON with the fields being 'a' , 'b', 'c' and the corresponding values being the unique pathway. For Example: 
                  
-            [
+            {{
 
-                    'a': ‘attempt to kill the witch”,
+                    'a': "attempt to kill the witch”,
                     
-                    ‘b’: “confront the step mom”,
+                    'b': "confront the step mom",
                     
-                    ‘c’: flee the village 
-            ]
+                    "c": "flee the village" 
+            }}
+
+            Don't put any backticks or string other than the object in the return value.
 			    
         """
        
@@ -153,7 +155,20 @@ def create_pathway_nodes(conversation_memory):
     converesation_memory.append(preferences)
             
     return preferences
-        
+
+
+def generate_image_from_text(description):
+    response = openai.images.generate(
+        model="dall-e-3",
+        prompt=description,
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+     
+    image_url = response.data[0].url
+
+    return image_url
 
 
 from stories.StoryPage import StoryPage
@@ -162,6 +177,8 @@ from audiorecorder import audiorecorder
 
 
 chosen_metric_improvement = ""
+
+
 
 with st.sidebar:
     st.title("monti 🧸| hawas workspace")
@@ -301,7 +318,7 @@ with st.expander("Chapter 1", icon="🤠"):
                     # To play audio in frontend:
                     # To save audio to a file, use pydub export method:
             print("audio file saved!")
-            st.audio(audio.export().read()) 
+            st.audio(audio.export().read(), autoplay=True) 
             audio.export("audio.wav", format="wav")
 
             reflection = "reflection incomplete. do not grade or provide feedback."
@@ -328,6 +345,8 @@ with st.expander("Chapter 1", icon="🤠"):
                     analysis = get_comprehension_analysis(chapter1, question, reflection, "Critical Thinking")
                     st.code(analysis, language="txt")
                     has_completed_comprehension = True
+                    with st.sidebar:
+                         st.success("chapter 1 completed :) keep going!")
 
     
     if has_completed_comprehension:
@@ -366,6 +385,21 @@ if ready_for_ch2:
 
         # the activity should depend on the exercise they are choosing. 
         st.code(pathways, language="txt")
+
+        # Parse the JSON string into a dictionary
+        data = json.loads(pathways)
+
+        # Extract values
+        a = data["a"]
+        b = data["b"]
+        c = data["c"]
+
+        images = {} 
+        for key in data:
+            description = data[key]
+            images[key] = generate_image_from_text(description)
+
+
 
     
 
