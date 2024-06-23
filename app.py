@@ -251,9 +251,6 @@ chosen_metric_improvement = ""
 with st.sidebar:
     st.title("monti 🧸| hawas workspace")
     st.subheader("the montessori experience - at a fraction of the cost")
-    st.markdown(
-        """feedback of reading progress will be dispalyed here!"""
-    )
     st.header("Progress")
     st.success("New Lesson Started", icon="💚")
 
