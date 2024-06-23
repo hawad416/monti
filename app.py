@@ -13,6 +13,10 @@ from langchain.chains import LLMChain
 import streamlit as st
 import time 
 import json
+from streamlit_card import card
+from st_clickable_images import clickable_images
+
+
 
 
 
@@ -21,9 +25,18 @@ import json
 st.set_page_config(layout="wide")
 st.title("lesson 1: hansel & gretel 🍭")
 
+
+
+
+
 converesation_memory = []
 
+pathway_node_images = ["https://cdn.vectorstock.com/i/1000v/98/29/cartoon-little-kid-happy-hansel-and-gretel-vector-5799829.jpg", "https://live.staticflickr.com/4016/4670903839_8785f2fcf6.jpg", "https://www.dltk-teach.com/fairy-tales/hansel-and-gretel/images/s/9.gif"]
+
+
      
+
+
 def get_comprehension_analysis(excerpt, question, reflection, metric):
     global converesation_memory
     analysis_prompt = f"""
@@ -127,14 +140,14 @@ def create_pathway_nodes(conversation_memory):
                  
             {{
 
-                    'a': "attempt to kill the witch”,
+                    "a": "attempt to kill the witch”,
                     
-                    'b': "confront the step mom",
+                    "b": "confront the step mom",
                     
                     "c": "flee the village" 
             }}
 
-            Don't put any backticks or string other than the object in the return value.
+            Don't put any backticks or string other than the object in the return value. Adhere to Python JSON rules. Don't do anything out of the ordinary.
 			    
         """
        
@@ -156,8 +169,27 @@ def create_pathway_nodes(conversation_memory):
             
     return preferences
 
+index = 0;
 
 def generate_image_from_text(description):
+    global index
+    try:
+        response = openai.images.generate(
+             model="dall-e-3",
+            prompt=description,
+            n=1,
+            size="1024x1024",
+            quality="standard"
+        )
+        image_url = response['data'][0]['url']
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        image_url = pathway_node_images[index]
+        index+=1
+    
+    return image_url
+
+    
     response = openai.images.generate(
         model="dall-e-3",
         prompt=description,
@@ -394,10 +426,28 @@ if ready_for_ch2:
         b = data["b"]
         c = data["c"]
 
-        images = {} 
-        for key in data:
-            description = data[key]
-            images[key] = generate_image_from_text(description)
+        with st.spinner("⭐️⭐️ choose a NEW pathway for your story! ⭐️⭐️"):
+            images = {} 
+            for key in data:
+                description = data[key]
+                images[key] = generate_image_from_text(description)
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.subheader("Pathway A")
+            col1.image(images["a"], caption=data["a"], width=150)
+
+            col2.subheader("Pathway B")
+            col2.image(images["b"], caption=data["b"],width=150)  
+
+            col3.subheader("Pathway C")
+            col3.image(images["c"],caption=data["c"], width=150)
+
+        
+        st.text_input("Choose your pathway!")
+
+
+        
 
 
 
