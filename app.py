@@ -82,6 +82,42 @@ def get_comprehension_analysis(excerpt, question, reflection, metric):
     return preferences
        
 
+def generate_new_pathway(pathway):
+    recent_excerpt = f""" 
+            "The children followed the white trail, and by sunrise they were safely home – but their stepmother’s smile was as cold as winter rain. “Husband,” she hissed. “See how your two pests torment me. Tonight you must lose them forever.
+              She gave each child a morsel of stale bread, and when their father led them through Long Lost Wood they followed him sadly. After many miles, he mopped his eyes and said, “Wait here, my dears, while I search for ripe blackberries.
+             They knew he would never come back, but when the wolves howled, Hansel smiled and said, “Cheer up, little sister. This time I have scattered a trail of small white breadcrumbs.
+             Alas! There was no trail to be seen – hungry birds had stolen EVERY crumb. So the two children slept on a bed of brown leaves, and in their dreams they saw a white dove who circled above them, calling: “Follow me! Follow me!”"
+
+        """
+
+
+    prompt= f"""
+            Role: You are a write of Hansel & Gretel and you are going to change the ending of the story based on the new pathway a child provides to you. 
+
+            Task: The new pathway is {pathway} . Generate  about 5 sentences to complete the hansel and gretel story based on the path, NOT the taditional one. Here is the most recent excerpt, be sure to use the context {recent_excerpt}
+			    
+        """
+       
+    messages = [
+                {"role": "system", "content": prompt},
+        ]
+
+            # Create a completion request to OpenAI
+    completion = openai.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+            )
+    preferences = completion.choices[0].message.content
+    print(preferences)
+
+         # append intiial role and system prompt
+    converesation_memory.append(comprehension_prompt)
+    converesation_memory.append(preferences)
+            
+    return preferences
+     
+
     
 
 # takes in a specific story chapter and generates a string based on it.
@@ -394,7 +430,7 @@ print(converesation_memory)
 
 if ready_for_ch2:
      # go on to chapter 2 !
-     has_completed_comprehension = False
+     has_completed_c2 = False
      with st.expander("Chapter 2"):
         st.subheader("A Walk Too Far ")
 
@@ -443,8 +479,37 @@ if ready_for_ch2:
             col3.subheader("Pathway C")
             col3.image(images["c"],caption=data["c"], width=150)
 
+            
+            st.subheader("Choose your pathway!")
+
+            chosen_path = st.radio(
+            "Think hard about the potential pathways! Think about the Pros & Cons & Select your path when ready!!",
+            [":rainbow[A]", "***B***", "C:"],
+            index=None,
+            )
+              
+            if chosen_path == ":rainbow[A]":
+                pref = generate_new_pathway(data["a"])
+                st.write(pref)
+            elif chosen_path == "***B***":
+                pref = generate_new_pathway(data["b"])
+                st.write(pref)
+            elif chosen_path == "C:":
+                pref = generate_new_pathway(data["c"])
+                st.write(pref)
+       
+                 
+                 
+                 
+
+
+
+        has_completed_c2 = True
+        with st.sidebar:
+            st.success("chapter 2 completed :) you are halfway there!")
         
-        st.text_input("Choose your pathway!")
+
+       
 
 
         
