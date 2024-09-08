@@ -1,15 +1,4 @@
-from langchain_openai import ChatOpenAI
 import openai
-from langchain_community.chat_models import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
-from langchain.schema import HumanMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
 import streamlit as st
 import time 
 import json
@@ -240,7 +229,7 @@ def generate_image_from_text(description):
 
 from stories.StoryPage import StoryPage
 from stories.StoryBook import Storybook
-from audiorecorder import audiorecorder
+from audio_recorder_streamlit import audio_recorder
 
 
 chosen_metric_improvement = ""
@@ -376,14 +365,34 @@ with st.expander("Chapter 1", icon="🤠"):
         question = get_comprehension_question(chapter1, comprehension_prompt)
         st.code(question,language="txt")
 
-    audio = audiorecorder("🎙️ tell monti what you think!", "click to stop recording")
+    audio = audio_recorder(
+            text="🎙️ tell monti what you think!, click to stop recording",
+            recording_color="#e8b62c",
+            neutral_color="#6aa36f",
+            icon_name="user",
+            pause_threshold=150.0,
+            icon_size="6x",
+            )
 
-    if len(audio) > 0:
+    if audio:
                     # To play audio in frontend:
                     # To save audio to a file, use pydub export method:
             print("audio file saved!")
-            st.audio(audio.export().read(), autoplay=True) 
-            audio.export("audio.wav", format="wav")
+            st.audio(audio, autoplay=True)
+                      
+            from pydub import AudioSegment
+            from io import BytesIO
+
+            audio_data = BytesIO(audio)  # Wrapping raw audio into a BytesIO object
+            audio_segment = AudioSegment.from_wav(audio_data)  # Assuming WAV format
+
+            # Save the audio segment to a file (you can specify the format here)
+            output_path = "audio.wav"  # Change this path as needed
+            audio_segment.export(output_path, format="wav")
+
+
+
+            #audio.export("audio.wav", format="wav")
 
             reflection = "reflection incomplete. do not grade or provide feedback."
     
@@ -392,7 +401,7 @@ with st.expander("Chapter 1", icon="🤠"):
                     import speech_recognition as sr
                     r = sr.Recognizer()
 
-                    hellow=sr.AudioFile('audio.wav')
+                    hellow=sr.AudioFile("audio.wav")
                     with hellow as source:
                         audio = r.record(source)
                     try:
