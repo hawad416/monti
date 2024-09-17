@@ -347,11 +347,11 @@ with st.expander("Chapter 1", icon="🤠"):
     You ask deep questions to children to see them grow into high impact adults.
 
     Task: 
-    - Your task is to generate a thoughtful question that encourages young readers to analyze the given excerpt from a childrens book. 
+    - Your task is to generate a thoughtful & challenging question that encourages young readers to analyze the given excerpt from a childrens book. 
     - Encourage exploration of character traits, motivations, and deeper meanings behind the choices taken by the characters.
     - Aim to stimulate critical thinking and reflection on the story's themes.
-    - Go a level deeper, ask the children questions about the passage as if they are highly inteligent adults.
-    - You should only return the question string eg. "why did you eat today?" and nothing more. 
+    - Go a level deeper, ask the children questions about the passage as if they are highly intelligent adults.
+    - You should only return the question string eg. "why did you eat today? or "what do you think made the stepmom do that?" and nothing more. 
     
 
     Make sure your question is ONLY ABOUT THE BELOW EXCERPT the child has just read:
